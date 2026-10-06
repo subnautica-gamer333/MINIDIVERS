@@ -1,18 +1,8 @@
-## Getting Started
+## Overview
 
-Welcome to the VS Code Java world. Here is a guideline to help you get started to write Java code in Visual Studio Code.
+A 2D verison of Helldivers 2, inspired by the minidivers channel on the HD2 discord. This is a major WIP.
+If I have used AI in this project, it is to re-organize existing code or to push my VSCode files to GitHub, as I am new to the Java and code development environments.
 
-## Folder Structure
+## Use
 
-The workspace contains two folders by default, where:
-
-- `src`: the folder to maintain sources
-- `lib`: the folder to maintain dependencies
-
-Meanwhile, the compiled output files will be generated in the `bin` folder by default.
-
-> If you want to customize the folder structure, open `.vscode/settings.json` and update the related settings there.
-
-## Dependency Management
-
-The `JAVA PROJECTS` view allows you to manage your dependencies. More details can be found [here](https://github.com/microsoft/vscode-java-dependency#manage-dependencies).
+The code will output the game to whatever command line it is run to, I don't know how to do anything else. If there is some way for reporting bugs on Github, lmk there if there is any problems.
