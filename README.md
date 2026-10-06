@@ -1,7 +1,6 @@
 ## Overview
 
 A 2D verison of Helldivers 2, inspired by the minidivers channel on the HD2 discord. This is a major WIP.
-If I have used AI in this project, it is to re-organize existing code or to push my VSCode files to GitHub, as I am new to the Java and code development environments.
 
 ## Use
 
