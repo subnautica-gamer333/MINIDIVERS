@@ -14,7 +14,7 @@ public class AsciiMap {
     private char tileUnderPlayer;
     private boolean playerPlaced;
 
-    static final int MAX_PLAYER_HEALTH = 1000;
+    static final int MAX_PLAYER_HEALTH = 750;
     static int playerhealth = MAX_PLAYER_HEALTH;
 
     static final int MAX_STIMS = 4;
@@ -118,10 +118,10 @@ private static boolean containsSymbol(char[] symbols, char tile) {
     private static Attack makeAttack(String name) {
         switch (name.toUpperCase()) {
             case "OBURST":    return new Attack("DDD", 1000, (int) (Math.random()*50), "orbital airburst strike");
-            case "500K":      return new Attack("WDSSS", 5000, (int) (Math.random()*50), "500K bomb");
+            case "500K":      return new Attack("WDSSS", 1750, (int) (Math.random()*250), "500K bomb");
             case "ESTRIKE":   return new Attack("WDSD", 750, (int) (Math.random()*50), "eagle airstrike");
             case "ORAIL":     return new Attack("DWSSD", 150, 0, "orbital railcannon");
-            case "OLASER":    return new Attack("DSWDS", 2000, (int) (Math.random()*50), "orbital laser");
+            case "OLASER":    return new Attack("DSWDS", 950, (int) (Math.random()*50), "orbital laser");
             case "PODS":      return new Attack("WDWA", 150, (int) (Math.random()*50), "eagle 110mm rocket pods");
             case "PRIMARY":   return new Attack("W", 50, (int) (Math.random()*10), "primary weapon");
             case "SECONDARY": return new Attack("W", 30, (int) (Math.random()*20), "secondary weapon");
@@ -141,9 +141,9 @@ private static boolean containsSymbol(char[] symbols, char tile) {
         }
     }
 
-    private static boolean enemyTurn(String enemyName, int enemyDamage) {
+    private static boolean enemyTurn(Patrol enemy, String enemyName, int enemyDamage) {
         System.out.println("The " + enemyName + " attacks you!");
-        int damageTaken = enemyDamage + (int) (Math.random()*50);
+        int damageTaken = enemy.scaleDamage(enemyDamage + (int) (Math.random()*50));
         playerhealth -= damageTaken;
         System.out.println("You took " + damageTaken + " damage. Health: " + Math.max(playerhealth, 0) + "/" + MAX_PLAYER_HEALTH);
         if (playerhealth <= 0) {
@@ -158,7 +158,7 @@ private static boolean containsSymbol(char[] symbols, char tile) {
             System.out.println("Please pick one of the combat options: PRIMARY, SECONDARY, "
                     + loadout.getStratagemOne() + ", " + loadout.getStratagemTwo() + ", "
                     + loadout.getStratagemThree() + ", " + loadout.getStratagemFour() + ", MEELEE, "
-                    + "STIM (" + stims + " left), " + "RESUPPLY( " + resupplies + " left)");
+                    + "STIM (" + stims + " left), " + "RESUPPLY (" + resupplies + " left). NOTE: Use WASD to input the codes, as you would in the base game.");
             if (!in.hasNextLine()) return false;
             String attack = in.nextLine().trim();
 
@@ -175,7 +175,7 @@ private static boolean containsSymbol(char[] symbols, char tile) {
                 int healed = heal(STIM_HEAL);
                 System.out.println("You used a stim and recovered " + healed + " health. Health: "
                         + playerhealth + "/" + MAX_PLAYER_HEALTH + ". Stims left: " + stims);
-                if (!enemyTurn(enemyName, enemyDamage)) return false;
+                if (!enemyTurn(enemy, enemyName, enemyDamage)) return false;
                 continue;
 
             } else if (attack.equalsIgnoreCase("RESUPPLY")) {
@@ -186,7 +186,7 @@ private static boolean containsSymbol(char[] symbols, char tile) {
                 resupplies--;
                 stims = MAX_STIMS;
                 System.out.println("You used a resupply and restored your stims. Stims: " + stims + ". Resupplies left: " + resupplies);
-                if (!enemyTurn(enemyName, enemyDamage)) return false;
+                if (!enemyTurn(enemy, enemyName, enemyDamage)) return false;
                 continue;
             }
 
@@ -217,10 +217,17 @@ private static boolean containsSymbol(char[] symbols, char tile) {
             }
 
             System.out.println("You used the " + chosen.attackName + ".");
+            int membersBefore = enemy.patrolMembers;
             if (attack.equalsIgnoreCase("ORAIL")) {
-                enemy.combinedHealth -= enemy.strongestMemberHealth;
+                if (enemy.railcannonStrike()) {
+                    System.out.println("The railcannon destroyed the " + enemy.strongestMember + "!");
+                }
             } else {
-                enemy.combinedHealth -= (chosen.attackDamage - chosen.Stratagemdeviation);
+                enemy.takeDamage(chosen.attackDamage - chosen.Stratagemdeviation);
+            }
+            int killed = membersBefore - enemy.patrolMembers;
+            if (killed > 0) {
+                System.out.println("You killed " + killed + (killed == 1 ? " enemy." : " enemies."));
             }
 
             if (!isStandardAttack && enemy.fabricators > 0) {
@@ -234,17 +241,19 @@ private static boolean containsSymbol(char[] symbols, char tile) {
             }
 
             if (enemy.fabricators > 0) {
-                int reinforcement = 100 * enemy.fabricators;
-                enemy.combinedHealth += reinforcement;
-                System.out.println("The fabricators deploy reinforcements! (+" + reinforcement + " health)");
+                enemy.addGrunts(enemy.fabricators);
+                System.out.println("The fabricators deploy " + enemy.fabricators + " reinforcements! (+"
+                        + enemy.fabricators * Patrol.GRUNT_HEALTH + " health)");
             }
 
             System.out.println("The " + enemyName + " has " + enemy.combinedHealth + " health remaining. It has "
-                    + enemy.patrolMembers + " members. Its strongest member is a " + enemy.strongestMember + ".");
+                    + enemy.patrolMembers + " members. "
+                    + (enemy.strongestAlive ? "Its strongest member is a " + enemy.strongestMember + "."
+                                            : "Its " + enemy.strongestMember + " has been destroyed."));
             if (enemy.fabricators > 0) {
                 System.out.println("Fabricators remaining: " + enemy.fabricators);
             }
-            if (!enemyTurn(enemyName, enemyDamage)) return false;
+            if (!enemyTurn(enemy, enemyName, enemyDamage)) return false;
         }
     }
 
